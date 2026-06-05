@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../contexts/AuthContext'
-import Logo from '../components/Logo'
+import Header from '../components/Header'
 
 const DEFAULT_BUDGET = 22000
 
@@ -43,8 +42,7 @@ function getMonthOptions() {
 }
 
 export default function Budget() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const currentMonth = getCurrentMonthKey()
   const months = getMonthOptions()
 
@@ -136,39 +134,16 @@ export default function Budget() {
 
   const sortedEntries = Object.entries(budgets).sort(([a], [b]) => b.localeCompare(a))
 
-  const displayName = user?.displayName ?? user?.email?.split('@')[0] ?? 'user'
-
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login')
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer mr-1">
-            <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-          </button>
-          <Logo className="size-7 sm:size-8 text-brand-600 shrink-0" />
-          <h1 className="text-lg sm:text-xl font-bold text-brand-700 truncate">Expense Manager</h1>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-6">
-          <span className="text-xs sm:text-sm text-gray-500">{displayName}</span>
-          <button onClick={handleLogout} className="rounded-lg border border-gray-300 px-3 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
-            Logout
-          </button>
-        </div>
-      </header>
+      <Header backTo="/dashboard" />
 
       <main className="flex-1 p-4 sm:p-8">
         <div className="mx-auto max-w-2xl">
           <h2 className="text-xl font-bold text-gray-900 mb-1">Monthly Budgets</h2>
           <p className="text-sm text-gray-500 mb-6">Manage your monthly spending limits</p>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6">
             <h3 className="text-sm font-semibold text-gray-900 mb-4">
               {editing ? `Budget for ${formatMonthLabel(editing)}` : `Set Budget for ${formatMonthLabel(selectedMonth)}`}
             </h3>
@@ -222,7 +197,7 @@ export default function Budget() {
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handleSave}
                 disabled={loading || saving || !amount || Number(amount) <= 0}
@@ -269,7 +244,7 @@ export default function Budget() {
                   <div key={monthKey} className="px-6 py-4 flex items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-gray-900">{formatMonthLabel(monthKey)}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 truncate">
                         BDT {entry.amount.toLocaleString()}
                         {entry.notes ? ` · ${entry.notes}` : ''}
                         {entry.updatedAt ? ` · Updated ${formatDate(entry.updatedAt)}` : ''}

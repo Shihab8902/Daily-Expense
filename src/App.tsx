@@ -5,6 +5,9 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Budget from './pages/Budget'
+import Expenses from './pages/Expenses'
+import Savings from './pages/Savings'
+import Reports from './pages/Reports'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -30,6 +33,9 @@ export default function App() {
         <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/budget" element={<ProtectedRoute><Budget /></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+        <Route path="/savings" element={<ProtectedRoute><Savings /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       </Routes>
     </div>
   )
