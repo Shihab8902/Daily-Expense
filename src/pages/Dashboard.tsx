@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
@@ -103,6 +103,39 @@ export default function Dashboard() {
       setInsightsLoading(false)
     }).catch(() => setInsightsLoading(false))
   }, [hasInsightData, budget, spent, savings, daysLeft, dailyBudget])
+
+  const activityItems = useMemo(() => {
+    const now = Date.now()
+    const items: { action: string; amount: string; time: string; type: 'expense' | 'saving' }[] = []
+    for (const e of currentExpenses) {
+      const diff = now - new Date(e.date).getTime()
+      const hours = Math.floor(diff / 3600000)
+      items.push({
+        action: e.name,
+        amount: `BDT ${e.amount.toLocaleString('en-BD')}`,
+        time: hours < 1 ? 'Just now' : hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`,
+        type: 'expense',
+      })
+    }
+    for (const s of currentSavings) {
+      const diff = now - new Date(s.date).getTime()
+      const hours = Math.floor(diff / 3600000)
+      items.push({
+        action: s.name,
+        amount: `BDT ${s.amount.toLocaleString('en-BD')}`,
+        time: hours < 1 ? 'Just now' : hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`,
+        type: 'saving',
+      })
+    }
+    items.sort((a, b) => {
+      const aVal = a.time.includes('Just now') ? 0 : parseInt(a.time)
+      const bVal = b.time.includes('Just now') ? 0 : parseInt(b.time)
+      if (a.time.includes('d') && b.time.includes('h')) return -1
+      if (a.time.includes('h') && b.time.includes('d')) return 1
+      return aVal - bVal
+    })
+    return items.slice(0, 5)
+  }, [currentExpenses, currentSavings])
 
   const cards = [
     {
@@ -243,20 +276,16 @@ export default function Dashboard() {
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-3">Recent Activity</h3>
               <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-                {[
-                  { action: 'Grocery shopping', amount: 'BDT 850', time: '2h ago', type: 'expense' },
-                  { action: 'Dining out', amount: 'BDT 420', time: '5h ago', type: 'expense' },
-                  { action: 'Monthly savings', amount: 'BDT 5,000', time: '1d ago', type: 'saving' },
-                  { action: 'Electricity bill', amount: 'BDT 1,200', time: '2d ago', type: 'expense' },
-                  { action: 'Freelance payment', amount: 'BDT 12,000', time: '3d ago', type: 'income' },
-                ].map((item) => (
+                {activityItems.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-gray-400">No activity yet this month.</div>
+                ) : activityItems.map((item) => (
                   <div key={item.action + item.time} className="px-4 py-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-900">{item.action}</p>
+                    <div className="min-w-0 flex-1 mr-2">
+                      <p className="text-sm text-gray-900 truncate">{item.action}</p>
                       <p className="text-xs text-gray-400">{item.time}</p>
                     </div>
-                    <span className={`text-sm font-medium shrink-0 ${item.type === 'income' ? 'text-green-600' : item.type === 'saving' ? 'text-brand-600' : 'text-gray-700'}`}>
-                      {item.type === 'income' ? '+' : '-'}{item.amount}
+                    <span className={`text-sm font-medium shrink-0 ${item.type === 'saving' ? 'text-brand-600' : 'text-gray-700'}`}>
+                      -{item.amount}
                     </span>
                   </div>
                 ))}
